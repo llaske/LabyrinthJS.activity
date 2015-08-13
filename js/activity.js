@@ -7,6 +7,14 @@ define(function (require) {
         // Initialize the activity.
         activity.setup();
 
+		// Initialize Cytoscape
+		cy = cytoscape({
+			container: document.getElementById('cy'),
+			
+			ready: function() {
+				console.log("Hello world !");
+			}
+		});
     });
 
 });
