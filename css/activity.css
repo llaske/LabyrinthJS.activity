@@ -10,3 +10,15 @@
   top: 0;
   background-color: white;
 }
+
+#main-toolbar #nodetext-button {
+  background-image: url(../icons/nodetext-mode.svg);
+}
+
+#main-toolbar #link-button {
+  background-image: url(../icons/link-mode.svg);
+}
+
+#main-toolbar #delete-button {
+  background-image: url(../icons/delete-mode.svg);
+}
