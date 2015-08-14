@@ -22,3 +22,11 @@
 #main-toolbar #delete-button {
   background-image: url(../icons/delete-mode.svg);
 }
+
+#fontsizecomputer {
+  position: absolute;
+  visibility: hidden;
+  height: auto;
+  width: auto;
+  white-space: nowrap;
+}
