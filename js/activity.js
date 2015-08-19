@@ -20,11 +20,31 @@ define(function (require) {
 			if (newMode == 0) nodetextButton.classList.add('active');
 			else if (newMode == 1) linkButton.classList.add('active');
 			else if (newMode == 2) removeButton.classList.add('active');
+			hideSubToolbar();
+			if (lastSelected != null) {
+				unselectAllNode();
+				lastSelected = null;
+			}
 		}	
 		nodetextButton.addEventListener('click', function () { switchMode(0); }, true);
 		linkButton.addEventListener('click', function () { switchMode(1); lastSelected = null; }, true);
 		removeButton.addEventListener('click', function () { switchMode(2); }, true);
 		
+		// Handle sub toolbar
+		var subToolbar = document.getElementById("sub-toolbar");
+		var textValue = document.getElementById("textvalue");
+		textValue.addEventListener('input', function() {
+			updateNodeText(lastSelected, textValue.value);
+		});
+
+		var showSubToolbar = function(node) {
+			subToolbar.style.visibility = "visible";
+			textValue.value = node.style()["content"];
+		}
+		var hideSubToolbar = function() {
+			subToolbar.style.visibility = "hidden";
+		}
+
 		// --- Cytoscape handling
 		
 		// Initialize board
@@ -35,12 +55,14 @@ define(function (require) {
 				// Create first node and select id
 				var firstNode = createNode(defaultText, getCenter());
 				firstNode.select();
+				selectNode(firstNode);
+				showSubToolbar(firstNode);
 				lastSelected = firstNode;
 			}
 		});
 		
 		// Event: a node is selected
-		cy.on('select', 'node', function() {
+		cy.on('tap', 'node', function() {
 			if (currentMode == 2) {
 				deleteNode(this);
 				if (lastSelected == this) lastSelected = null;
@@ -50,13 +72,20 @@ define(function (require) {
 					createEdge(lastSelected, this);
 				}
 				return;
+			} else {
+				if (isSelectedNode(this)) {
+					unselectNode(this);
+					hideSubToolbar();
+				} else {
+					selectNode(this);
+					showSubToolbar(this);
+				}
+				lastSelected = this;
 			}
-			selectNode(this);
 		});
 
 		// Event: a node is unselected
 		cy.on('unselect', 'node', function() {
-			lastSelected = this;
 			unselectNode(this);
 		});
 
@@ -65,7 +94,8 @@ define(function (require) {
 			if (currentMode == 2) {
 				deleteEdge(this);
 				return;
-			}		
+			}
+			hideSubToolbar();
 		});
 		
 		// Event: tap on the board
@@ -76,6 +106,9 @@ define(function (require) {
 					if (lastSelected != null)
 						createEdge(lastSelected, newNode);
 					newNode.select();
+					selectNode(newNode);
+					showSubToolbar(newNode);
+					lastSelected = newNode;
 				}
 			}
 		});
@@ -121,7 +154,17 @@ define(function (require) {
 		
 		// Update node text and change size
 		var updateNodeText = function(node, text) {
-			// TODO
+			var size = computeStringSize(text, currentFontSize);
+			node.style({
+				'content': text,
+				'width': size.width,
+				'height': size.height
+			});			
+		}
+		
+		// Test if node is selected
+		var isSelectedNode = function(node) {
+			return node.style()['border-style'] == 'dashed';
 		}
 		
 		// Set node as selected
@@ -140,6 +183,15 @@ define(function (require) {
 				'border-style': 'solid',					
 				'border-width': '1px'
 			});		
+		}
+		
+		// Unselect all node
+		var unselectAllNode = function() {
+			var nodes = cy.collection("node");
+			for (var i = 0 ; i < nodes.length ; i++) {
+				unselectNode(nodes[i]);
+			}
+		
 		}
 		
 		// Delete node, linked edges are removed too
