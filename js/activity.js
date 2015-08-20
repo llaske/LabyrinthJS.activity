@@ -71,6 +71,7 @@ define(function (require) {
 				if (lastSelected != null && lastSelected != this) {
 					createEdge(lastSelected, this);
 				}
+				lastSelected = this;
 				return;
 			} else {
 				if (isSelectedNode(this)) {
@@ -79,6 +80,10 @@ define(function (require) {
 				} else {
 					selectNode(this);
 					showSubToolbar(this);
+					if (textValue.value == defaultText)
+						textValue.setSelectionRange(0, textValue.value.length);
+					else
+						textValue.setSelectionRange(textValue.value.length, textValue.value.length);
 				}
 				lastSelected = this;
 			}
