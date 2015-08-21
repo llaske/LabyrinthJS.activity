@@ -33,13 +33,33 @@ define(function (require) {
 		// Handle sub toolbar
 		var subToolbar = document.getElementById("sub-toolbar");
 		var textValue = document.getElementById("textvalue");
+		var boldButton = document.getElementById("bold-button");
+		var italicButton = document.getElementById("italics-button");
 		textValue.addEventListener('input', function() {
 			updateNodeText(lastSelected, textValue.value);
 		});
-
+		
+		boldButton.addEventListener('click', function () {
+			lastSelected.toggleClass('bold-text');
+			updateNodeText(lastSelected);
+		});
+		italicButton.addEventListener('click', function () {
+			lastSelected.toggleClass('italic-text');
+			updateNodeText(lastSelected);
+		});
 		var showSubToolbar = function(node) {
 			subToolbar.style.visibility = "visible";
 			textValue.value = node.style()["content"];
+			if (node.hasClass('bold-text')) {
+				boldButton.classList.add('active');
+			} else {
+				boldButton.classList.remove('active');			
+			}
+			if (node.hasClass('italic-text')) {
+				boldButton.classList.add('active');
+			} else {
+				boldButton.classList.remove('active');			
+			}
 		}
 		var hideSubToolbar = function() {
 			subToolbar.style.visibility = "hidden";
@@ -58,7 +78,22 @@ define(function (require) {
 				selectNode(firstNode);
 				showSubToolbar(firstNode);
 				lastSelected = firstNode;
-			}
+			},
+			
+			style: [
+				{
+					selector: '.bold-text',
+					css: {
+						'font-weight': 'bold'
+					}
+				},
+				{
+					selector: '.italic-text',
+					css: {
+						'font-style': 'italic'
+					}
+				}				
+			]
 		});
 		
 		// Event: a node is selected
@@ -121,26 +156,27 @@ define(function (require) {
 		// --- Node and edge handling functions
 		var nodeCount = 0;
 		var edgeCount = 0;
-		var currentFontSize = "16px";
+		var currentFontSize = 16;
 		var lastSelected = null;
 		var defaultText = "<Your new idea>";
 		
 		// Create a new node with text and position
 		var createNode = function(text, position) {
-			var size = computeStringSize(text, currentFontSize);
+			var size = computeStringSize(text, currentFontSize, false, false);
 			cy.add({
 				group: 'nodes',
 				nodes: [
 					{
 						data: {
-							id: 'n'+(++nodeCount)
+							id: 'n'+(++nodeCount),
+							'font-weight': 'normal'
 						},
 						position: {
 							x: position.x,
 							y: position.y
 						}
 					}
-				]							
+				]						
 			});
 			var newnode = cy.getElementById('n'+nodeCount);
 			newnode.style({
@@ -159,7 +195,8 @@ define(function (require) {
 		
 		// Update node text and change size
 		var updateNodeText = function(node, text) {
-			var size = computeStringSize(text, currentFontSize);
+			if (text === undefined) text = node.style()['content'];
+			var size = computeStringSize(text, currentFontSize, node.hasClass('bold-text'), node.hasClass('italic-text'));
 			node.style({
 				'content': text,
 				'width': size.width,
@@ -221,10 +258,14 @@ define(function (require) {
 		
 		// --- Utility functions
 		// HACK: dynamically compute need size putting the string in a hidden div element
-		var computeStringSize = function(text, fontsize) {
+		var computeStringSize = function(text, fontsize, bold, italic) {
 			var computer = document.getElementById("fontsizecomputer");
 			computer.innerHTML = text.replace("<","&lt;").replace(">","&gt;");
-			computer.style.fontSize = fontsize;
+			computer.style.fontSize = fontsize+"px";
+			if (bold) computer.style.fontWeight = "bold";
+			else computer.style.fontWeight = "normal";
+			if (italic) computer.style.fontStyle = "italic";
+			else computer.style.fontStyle = "normal";			
 			return {width: (computer.clientWidth+20)+"px", heigth: (computer.clientHeight+4)+"px"};
 		}
 		
