@@ -1,5 +1,6 @@
 define(function (require) {
     var activity = require("sugar-web/activity/activity");
+	var colorpalette = require("sugar-web/graphics/colorpalette");
 
     // Manipulate the DOM only when it is ready.
     require(['domReady!'], function (doc) {
@@ -35,6 +36,16 @@ define(function (require) {
 		var textValue = document.getElementById("textvalue");
 		var boldButton = document.getElementById("bold-button");
 		var italicButton = document.getElementById("italics-button");
+        var foregroundButton = document.getElementById("foreground-button");
+		foregroundPalette = new colorpalette.ColorPalette(foregroundButton);
+		foregroundPalette.setColor('rgb(0, 0, 0)');
+		var ignoreEvent = false;
+		
+		foregroundPalette.addEventListener('colorChange', function(e) {
+			if (!ignoreEvent) lastSelected.style('color', e.detail.color);
+			ignoreEvent = false;
+		});
+		
 		textValue.addEventListener('input', function() {
 			updateNodeText(lastSelected, textValue.value);
 		});
@@ -60,6 +71,9 @@ define(function (require) {
 			} else {
 				boldButton.classList.remove('active');			
 			}
+			ignoreEvent = true;
+			foregroundPalette.setColor(node.style()['color']);
+
 		}
 		var hideSubToolbar = function() {
 			subToolbar.style.visibility = "hidden";
@@ -76,8 +90,8 @@ define(function (require) {
 				var firstNode = createNode(defaultText, getCenter());
 				firstNode.select();
 				selectNode(firstNode);
-				showSubToolbar(firstNode);
 				lastSelected = firstNode;
+				showSubToolbar(firstNode);
 			},
 			
 			style: [
@@ -147,8 +161,8 @@ define(function (require) {
 						createEdge(lastSelected, newNode);
 					newNode.select();
 					selectNode(newNode);
+					lastSelected = newNode;					
 					showSubToolbar(newNode);
-					lastSelected = newNode;
 				}
 			}
 		});
@@ -183,6 +197,7 @@ define(function (require) {
 				'content': text,
 				'width': size.width,
 				'height': size.height,
+				'color': 'rgb(0, 0, 0)',
 				'text-valign': 'center',
 				'text-halign': 'center',
 				'border-color': 'darkgray',
