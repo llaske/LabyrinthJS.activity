@@ -74,8 +74,27 @@
   background-image: url(../icons/italics-text.svg);
 }
 
-#sub-toolbar #underline-button {
-  background-image: url(../icons/underline-text.svg);
+.splitbar {
+  background-image: url(../icons/split.svg);
+  background-position: center;
+  background-repeat: no;
+  width: 3px;
+  margin-left: 5px;
+  margin-right: 4px;
+  height: 45px;
+  display: inline-block;
+}
+
+#sub-toolbar #fontminus-button {
+  background-image: url(../icons/resize-.svg);
+}
+
+#sub-toolbar #font-button {
+  background-image: url(../icons/font-text.svg);
+}
+
+#sub-toolbar #fontplus-button {
+  background-image: url(../icons/resize+.svg);
 }
 
 #fontsizecomputer {

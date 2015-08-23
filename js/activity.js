@@ -44,6 +44,8 @@ define(function (require) {
 		backgroundPalette = new colorpalette.ColorPalette(backgroundButton);
 		backgroundPalette.setColor('rgb(255, 255, 255)');
 		var ignoreBackgroundEvent = false;
+		var fontMinusButton = document.getElementById("fontminus-button");
+		var fontPlusButton = document.getElementById("fontplus-button");
 		
 		foregroundPalette.addEventListener('colorChange', function(e) {
 			if (!ignoreForegroundEvent) lastSelected.style('color', e.detail.color);
@@ -67,6 +69,17 @@ define(function (require) {
 			lastSelected.toggleClass('italic-text');
 			updateNodeText(lastSelected);
 		});
+		
+		fontMinusButton.addEventListener('click', function() {
+			lastSelected.data('font-size', Math.max(6, lastSelected.data('font-size')-2));
+			updateNodeText(lastSelected);
+		});
+		
+		fontPlusButton.addEventListener('click', function() {
+			lastSelected.data('font-size', Math.min(100, lastSelected.data('font-size')+2));
+			updateNodeText(lastSelected);
+		});
+		
 		var showSubToolbar = function(node) {
 			subToolbar.style.visibility = "visible";
 			textValue.value = node.style()["content"];
@@ -180,19 +193,20 @@ define(function (require) {
 		// --- Node and edge handling functions
 		var nodeCount = 0;
 		var edgeCount = 0;
-		var currentFontSize = 16;
+		var defaultFontSize = 16;
 		var lastSelected = null;
 		var defaultText = "<Your new idea>";
 		
 		// Create a new node with text and position
 		var createNode = function(text, position) {
-			var size = computeStringSize(text, currentFontSize, false, false);
+			var size = computeStringSize(text, defaultFontSize, false, false);
 			cy.add({
 				group: 'nodes',
 				nodes: [
 					{
 						data: {
 							id: 'n'+(++nodeCount),
+							'font-size': defaultFontSize,
 							'font-weight': 'normal'
 						},
 						position: {
@@ -200,7 +214,7 @@ define(function (require) {
 							y: position.y
 						}
 					}
-				]						
+				]
 			});
 			var newnode = cy.getElementById('n'+nodeCount);
 			newnode.style({
@@ -208,6 +222,7 @@ define(function (require) {
 				'width': size.width,
 				'height': size.height,
 				'color': 'rgb(0, 0, 0)',
+				'font-size': defaultFontSize+'px',
 				'text-valign': 'center',
 				'text-halign': 'center',
 				'border-color': 'darkgray',
@@ -221,9 +236,11 @@ define(function (require) {
 		// Update node text and change size
 		var updateNodeText = function(node, text) {
 			if (text === undefined) text = node.style()['content'];
-			var size = computeStringSize(text, currentFontSize, node.hasClass('bold-text'), node.hasClass('italic-text'));
+			var fontSize = node.data('font-size');
+			var size = computeStringSize(text, fontSize, node.hasClass('bold-text'), node.hasClass('italic-text'));
 			node.style({
 				'content': text,
+				'font-size': fontSize+'px',
 				'width': size.width,
 				'height': size.height
 			});			
@@ -258,7 +275,6 @@ define(function (require) {
 			for (var i = 0 ; i < nodes.length ; i++) {
 				unselectNode(nodes[i]);
 			}
-		
 		}
 		
 		// Delete node, linked edges are removed too
@@ -291,7 +307,7 @@ define(function (require) {
 			else computer.style.fontWeight = "normal";
 			if (italic) computer.style.fontStyle = "italic";
 			else computer.style.fontStyle = "normal";			
-			return {width: (computer.clientWidth+20)+"px", heigth: (computer.clientHeight+4)+"px"};
+			return {width: (computer.clientWidth+fontsize)+"px", height: (computer.clientHeight+fontsize)+"px"};
 		}
 		
 		// Get center of drawing zone
