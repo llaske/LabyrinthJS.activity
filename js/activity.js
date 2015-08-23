@@ -39,11 +39,20 @@ define(function (require) {
         var foregroundButton = document.getElementById("foreground-button");
 		foregroundPalette = new colorpalette.ColorPalette(foregroundButton);
 		foregroundPalette.setColor('rgb(0, 0, 0)');
-		var ignoreEvent = false;
+		var ignoreForegroundEvent = false; // HACK: Need because SetColor itself raise an event
+        var backgroundButton = document.getElementById("background-button");
+		backgroundPalette = new colorpalette.ColorPalette(backgroundButton);
+		backgroundPalette.setColor('rgb(255, 255, 255)');
+		var ignoreBackgroundEvent = false;
 		
 		foregroundPalette.addEventListener('colorChange', function(e) {
-			if (!ignoreEvent) lastSelected.style('color', e.detail.color);
-			ignoreEvent = false;
+			if (!ignoreForegroundEvent) lastSelected.style('color', e.detail.color);
+			ignoreForegroundEvent = false;
+		});
+		
+		backgroundPalette.addEventListener('colorChange', function(e) {
+			if (!ignoreBackgroundEvent) lastSelected.style('background-color', e.detail.color);
+			ignoreBackgroundEvent = false;
 		});
 		
 		textValue.addEventListener('input', function() {
@@ -71,9 +80,10 @@ define(function (require) {
 			} else {
 				boldButton.classList.remove('active');			
 			}
-			ignoreEvent = true;
+			ignoreForegroundEvent = true;
 			foregroundPalette.setColor(node.style()['color']);
-
+			ignoreBackgroundEvent = true;
+			backgroundPalette.setColor(node.style()['background-color']);
 		}
 		var hideSubToolbar = function() {
 			subToolbar.style.visibility = "hidden";
@@ -201,7 +211,7 @@ define(function (require) {
 				'text-valign': 'center',
 				'text-halign': 'center',
 				'border-color': 'darkgray',
-				'background-color': 'white',
+				'background-color': 'rgb(255, 255, 255)',
 				'border-width': '1px',
 				'shape': 'roundrectangle'
 			});
