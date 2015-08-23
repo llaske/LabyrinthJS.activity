@@ -1,6 +1,7 @@
 define(function (require) {
     var activity = require("sugar-web/activity/activity");
 	var colorpalette = require("sugar-web/graphics/colorpalette");
+	var textpalette = require("fontpalette");
 
     // Manipulate the DOM only when it is ready.
     require(['domReady!'], function (doc) {
@@ -46,6 +47,8 @@ define(function (require) {
 		var ignoreBackgroundEvent = false;
 		var fontMinusButton = document.getElementById("fontminus-button");
 		var fontPlusButton = document.getElementById("fontplus-button");
+        var fontButton = document.getElementById("font-button");
+		fontPalette = new textpalette.TextPalette(fontButton);
 		
 		foregroundPalette.addEventListener('colorChange', function(e) {
 			if (!ignoreForegroundEvent) lastSelected.style('color', e.detail.color);
@@ -55,6 +58,16 @@ define(function (require) {
 		backgroundPalette.addEventListener('colorChange', function(e) {
 			if (!ignoreBackgroundEvent) lastSelected.style('background-color', e.detail.color);
 			ignoreBackgroundEvent = false;
+		});
+		
+		fontPalette.addEventListener('fontChange', function(e) {
+			var newfont = e.detail.family;
+			lastSelected.data('font-family', newfont);
+			lastSelected.removeClass('arial-text comic-text verdana-text');
+			updateNodeText(lastSelected);
+			if (newfont == 'Arial') lastSelected.addClass('arial-text');
+			else if (newfont == 'Comic Sans MS') lastSelected.addClass('comic-text');
+			else if (newfont == 'Verdana') lastSelected.addClass('verdana-text');
 		});
 		
 		textValue.addEventListener('input', function() {
@@ -89,14 +102,15 @@ define(function (require) {
 				boldButton.classList.remove('active');			
 			}
 			if (node.hasClass('italic-text')) {
-				boldButton.classList.add('active');
+				italicButton.classList.add('active');
 			} else {
-				boldButton.classList.remove('active');			
+				italicButton.classList.remove('active');			
 			}
 			ignoreForegroundEvent = true;
 			foregroundPalette.setColor(node.style()['color']);
 			ignoreBackgroundEvent = true;
 			backgroundPalette.setColor(node.style()['background-color']);
+			fontPalette.setFont(node.data('font-family'));
 		}
 		var hideSubToolbar = function() {
 			subToolbar.style.visibility = "hidden";
@@ -129,7 +143,25 @@ define(function (require) {
 					css: {
 						'font-style': 'italic'
 					}
-				}				
+				},
+				{
+					selector: '.arial-text',
+					css: {
+						'font-family': 'Arial'
+					}
+				},
+				{
+					selector: '.comic-text',
+					css: {
+						'font-family': 'Comic Sans MS'
+					}
+				},
+				{
+					selector: '.verdana-text',
+					css: {
+						'font-family': 'Verdana'
+					}
+				}
 			]
 		});
 		
@@ -193,19 +225,21 @@ define(function (require) {
 		// --- Node and edge handling functions
 		var nodeCount = 0;
 		var edgeCount = 0;
+		var defaultFontFamily = "Arial";
 		var defaultFontSize = 16;
 		var lastSelected = null;
 		var defaultText = "<Your new idea>";
 		
 		// Create a new node with text and position
 		var createNode = function(text, position) {
-			var size = computeStringSize(text, defaultFontSize, false, false);
+			var size = computeStringSize(text, defaultFontFamily, defaultFontSize, false, false);
 			cy.add({
 				group: 'nodes',
 				nodes: [
 					{
 						data: {
 							id: 'n'+(++nodeCount),
+							'font-family': defaultFontFamily,
 							'font-size': defaultFontSize,
 							'font-weight': 'normal'
 						},
@@ -222,6 +256,7 @@ define(function (require) {
 				'width': size.width,
 				'height': size.height,
 				'color': 'rgb(0, 0, 0)',
+				'font-family': 'Arial',
 				'font-size': defaultFontSize+'px',
 				'text-valign': 'center',
 				'text-halign': 'center',
@@ -237,10 +272,12 @@ define(function (require) {
 		var updateNodeText = function(node, text) {
 			if (text === undefined) text = node.style()['content'];
 			var fontSize = node.data('font-size');
-			var size = computeStringSize(text, fontSize, node.hasClass('bold-text'), node.hasClass('italic-text'));
+			var fontFamily = node.data('font-family');
+			var size = computeStringSize(text, fontFamily, fontSize, node.hasClass('bold-text'), node.hasClass('italic-text'));
 			node.style({
 				'content': text,
 				'font-size': fontSize+'px',
+				'font-family': fontFamily,
 				'width': size.width,
 				'height': size.height
 			});			
@@ -299,9 +336,10 @@ define(function (require) {
 		
 		// --- Utility functions
 		// HACK: dynamically compute need size putting the string in a hidden div element
-		var computeStringSize = function(text, fontsize, bold, italic) {
+		var computeStringSize = function(text, fontfamily, fontsize, bold, italic) {
 			var computer = document.getElementById("fontsizecomputer");
 			computer.innerHTML = text.replace("<","&lt;").replace(">","&gt;");
+			computer.style.fontFamily = fontfamily;
 			computer.style.fontSize = fontsize+"px";
 			if (bold) computer.style.fontWeight = "bold";
 			else computer.style.fontWeight = "normal";
