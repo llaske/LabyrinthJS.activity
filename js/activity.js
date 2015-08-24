@@ -76,10 +76,20 @@ define(function (require) {
 		
 		boldButton.addEventListener('click', function () {
 			lastSelected.toggleClass('bold-text');
+			if (lastSelected.hasClass('bold-text')) {
+				boldButton.classList.add('active');
+			} else {
+				boldButton.classList.remove('active');			
+			}
 			updateNodeText(lastSelected);
 		});
 		italicButton.addEventListener('click', function () {
 			lastSelected.toggleClass('italic-text');
+			if (lastSelected.hasClass('italic-text')) {
+				italicButton.classList.add('active');
+			} else {
+				italicButton.classList.remove('active');			
+			}
 			updateNodeText(lastSelected);
 		});
 		
