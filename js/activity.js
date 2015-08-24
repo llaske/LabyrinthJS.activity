@@ -114,6 +114,9 @@ define(function (require) {
 		}
 		var hideSubToolbar = function() {
 			subToolbar.style.visibility = "hidden";
+			backgroundPalette.popDown();
+			foregroundPalette.popDown();
+			fontPalette.popDown();
 		}
 
 		// --- Cytoscape handling
