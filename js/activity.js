@@ -51,12 +51,18 @@ define(function (require) {
 		fontPalette = new textpalette.TextPalette(fontButton);
 		
 		foregroundPalette.addEventListener('colorChange', function(e) {
-			if (!ignoreForegroundEvent) lastSelected.style('color', e.detail.color);
+			if (!ignoreForegroundEvent) {
+				lastSelected.style('color', e.detail.color);
+				lastSelected.data('color', e.detail.color);
+			}
 			ignoreForegroundEvent = false;
 		});
 		
 		backgroundPalette.addEventListener('colorChange', function(e) {
-			if (!ignoreBackgroundEvent) lastSelected.style('background-color', e.detail.color);
+			if (!ignoreBackgroundEvent) {
+				lastSelected.style('background-color', e.detail.color);
+				lastSelected.data('background-color', e.detail.color);
+			}
 			ignoreBackgroundEvent = false;
 		});
 		
@@ -128,7 +134,21 @@ define(function (require) {
 			foregroundPalette.popDown();
 			fontPalette.popDown();
 		}
-
+			
+		// Handle graph save/world
+		var stopButton = document.getElementById("stop-button");
+		stopButton.addEventListener('click', function (event) {
+			console.log("writing...");
+			saveGraph(function (error) {
+				if (error === null) {
+					console.log("write done.");
+				}
+				else {
+					console.log("write failed.");
+				}
+			});
+		});
+			
 		// --- Cytoscape handling
 		
 		// Initialize board
@@ -142,9 +162,22 @@ define(function (require) {
 				selectNode(firstNode);
 				lastSelected = firstNode;
 				showSubToolbar(firstNode);
+				
+				// Load world
+				loadGraph();
 			},
 			
 			style: [
+				{
+					selector: '.standard-node',
+					css: {
+						'text-valign': 'center',
+						'text-halign': 'center',
+						'border-color': 'darkgray',
+						'border-width': '1px',
+						'shape': 'roundrectangle'		
+					}
+				},
 				{
 					selector: '.bold-text',
 					css: {
@@ -254,7 +287,10 @@ define(function (require) {
 							id: 'n'+(++nodeCount),
 							'font-family': defaultFontFamily,
 							'font-size': defaultFontSize,
-							'font-weight': 'normal'
+							'font-weight': 'normal',
+							'content': text,
+							'color': 'rgb(0, 0, 0)',
+							'background-color': 'rgb(255, 255, 255)'
 						},
 						position: {
 							x: position.x,
@@ -271,19 +307,16 @@ define(function (require) {
 				'color': 'rgb(0, 0, 0)',
 				'font-family': 'Arial',
 				'font-size': defaultFontSize+'px',
-				'text-valign': 'center',
-				'text-halign': 'center',
-				'border-color': 'darkgray',
-				'background-color': 'rgb(255, 255, 255)',
-				'border-width': '1px',
-				'shape': 'roundrectangle'
+				'background-color': 'rgb(255, 255, 255)'
 			});
+			newnode.addClass('standard-node');
 			return newnode;
 		}
 		
 		// Update node text and change size
 		var updateNodeText = function(node, text) {
 			if (text === undefined) text = node.style()['content'];
+			else node.data('content', text);
 			var fontSize = node.data('font-size');
 			var fontFamily = node.data('font-family');
 			var size = computeStringSize(text, fontFamily, fontSize, node.hasClass('bold-text'), node.hasClass('italic-text'));
@@ -367,6 +400,47 @@ define(function (require) {
 			var center = {x: canvas.clientWidth/2, y: canvas.clientHeight/2};
 			return center;
 		}
+		
+		// Load graph from datastore 
+		var loadGraph = function() {
+			var datastoreObject = activity.getDatastoreObject();
+			datastoreObject.loadAsText(function (error, metadata, data) {
+				if (data == null)
+					return;
+					
+				// Destroy the world
+				cy.remove("node");
+				cy.remove("edge");
+				hideSubToolbar();
+				lastSelected = null;
+				
+				// Recreate nodes and set styles and text
+				cy.add({
+					group: 'nodes',
+					nodes: data.elements.nodes
+				});
+				var nodes = cy.collection("node");
+				for (var i = 0 ; i < nodes.length ; i++) {
+					var newnode = nodes[i];
+					updateNodeText(newnode, newnode.data('content'));
+					newnode.style('color', newnode.data('color'));
+					newnode.style('background-color', newnode.data('background-color'));
+				}
+				
+				// Recreate edges
+				cy.add({
+					group: 'edges',
+					edges: data.elements.edges
+				});
+			});
+		}
+		
+		// Save graph to datastore
+		var saveGraph = function(callback) {
+			var datastoreObject = activity.getDatastoreObject();
+			var jsonData = cy.json();
+			datastoreObject.setDataAsText(jsonData);
+			datastoreObject.save(callback);
+		}
     });
-
 });
