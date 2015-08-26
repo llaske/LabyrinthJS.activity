@@ -1,6 +1,7 @@
 define(function (require) {
     var activity = require("sugar-web/activity/activity");
 	var colorpalette = require("sugar-web/graphics/colorpalette");
+	var zoompalette = require("zoompalette");
 	var textpalette = require("fontpalette");
 
     // Manipulate the DOM only when it is ready.
@@ -31,6 +32,23 @@ define(function (require) {
 		nodetextButton.addEventListener('click', function () { switchMode(0); }, true);
 		linkButton.addEventListener('click', function () { switchMode(1); lastSelected = null; }, true);
 		removeButton.addEventListener('click', function () { switchMode(2); }, true);
+        var zoomButton = document.getElementById("zoom-button");		
+		zoomPalette = new zoompalette.zoomPalette(zoomButton);	
+		zoomPalette.addEventListener('zoom', function(e) {
+			var action = e.detail.zoom;
+			var currentZoom = cy.zoom();
+			var zoomStep = 0.25;
+			if (action == 0) {
+				if (currentZoom != cy.minZoom() && currentZoom-zoomStep > cy.minZoom()) cy.zoom(currentZoom-zoomStep);
+			} else if (action == 1) {
+				if (currentZoom != cy.maxZoom()) cy.zoom(currentZoom+zoomStep);
+			} else if (action == 2) {
+				cy.fit();
+			} else if (action == 3) {
+				cy.center();
+			}
+		});
+		
 		
 		// Handle sub toolbar
 		var subToolbar = document.getElementById("sub-toolbar");
