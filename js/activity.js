@@ -420,20 +420,29 @@ define(function (require) {
 					nodes: data.elements.nodes
 				});
 				var nodes = cy.collection("node");
+				var maxCount = 0;
 				for (var i = 0 ; i < nodes.length ; i++) {
 					var newnode = nodes[i];
 					updateNodeText(newnode, newnode.data('content'));
 					newnode.style('color', newnode.data('color'));
 					newnode.style('background-color', newnode.data('background-color'));
+					var id = newnode.data('id').substr(1);
+					if (id > maxCount) maxCount = id;
 				}
-				nodeCount = nodes.length;
+				nodeCount = maxCount+1;
 				
 				// Recreate edges
 				cy.add({
 					group: 'edges',
 					edges: data.elements.edges
 				});
-				edgeCount = data.elements.edges.length;
+				var edges = cy.collection("edge");
+				maxCount = 0;
+				for (var i = 0 ; i < edges.length ; i++) {
+					var id = edges[i].data('id').substr(1);
+					if (id > maxCount) maxCount = id;
+				}
+				edgeCount = maxCount+1;
 			});
 		}
 		
