@@ -426,12 +426,14 @@ define(function (require) {
 					newnode.style('color', newnode.data('color'));
 					newnode.style('background-color', newnode.data('background-color'));
 				}
+				nodeCount = nodes.length;
 				
 				// Recreate edges
 				cy.add({
 					group: 'edges',
 					edges: data.elements.edges
 				});
+				edgeCount = data.elements.edges.length;
 			});
 		}
 		
