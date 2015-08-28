@@ -1,4 +1,5 @@
 define(function (require) {
+	var l10n = require("webL10n");
     var activity = require("sugar-web/activity/activity");
 	var colorpalette = require("sugar-web/graphics/colorpalette");
 	var zoompalette = require("zoompalette");
@@ -9,7 +10,7 @@ define(function (require) {
 
         // Initialize the activity.
         activity.setup();
-	
+
 		// Handle toolbar mode switch
 		var currentMode = 0;
 		var nodetextButton = document.getElementById("nodetext-button");
@@ -178,7 +179,33 @@ define(function (require) {
 				}
 			});
 		});
-			
+		
+		// Handle localization
+		window.addEventListener('localized', function() {
+			var navigatorLanguage = navigator.language;
+			if (navigatorLanguage) {
+				if (navigatorLanguage.indexOf("fr") != -1)
+					l10n.locale = "fr";
+				else if (navigatorLanguage.indexOf("es") != -1)
+					l10n.locale = "es";
+			}
+			defaultText = l10n.get("YourNewIdea");
+			nodetextButton.title = l10n.get("nodetextTitle");
+			linkButton.title = l10n.get("linkButtonTitle");
+			removeButton.title = l10n.get("removeButtonTitle");
+			undoButton.title = l10n.get("undoButtonTitle");
+			redoButton.title = l10n.get("redoButtonTitle");
+			zoomButton.title = l10n.get("zoomButtonTitle");
+			foregroundButton.title = l10n.get("foregroundButtonTitle");
+			backgroundButton.title = l10n.get("backgroundButtonTitle");
+			textValue.placeholder = l10n.get("typeText");
+			boldButton.title = l10n.get("boldButtonTitle");
+			italicButton.title = l10n.get("italicButtonTitle");
+			fontMinusButton.title = l10n.get("fontMinusButtonTitle");
+			fontPlusButton.title = l10n.get("fontPlusButtonTitle");
+			fontButton.title = l10n.get("fontButtonTitle");
+		}, false);
+		
 		// --- Cytoscape handling
 		
 		// Initialize board
@@ -568,6 +595,5 @@ define(function (require) {
 			undoButton.disabled = (stateHistory.length < 1 || (stateHistory.length >= 1 && stateIndex == 0));
 			redoButton.disabled = (stateIndex+1 >= stateLength);
 		}
-
     });
 });
