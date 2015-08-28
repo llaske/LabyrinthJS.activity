@@ -33,7 +33,10 @@ define(function (require) {
 		linkButton.addEventListener('click', function () { switchMode(1); lastSelected = null; }, true);
 		removeButton.addEventListener('click', function () { switchMode(2); }, true);
         var zoomButton = document.getElementById("zoom-button");		
-		zoomPalette = new zoompalette.zoomPalette(zoomButton);	
+		zoomPalette = new zoompalette.zoomPalette(zoomButton);		
+		zoomPalette.addEventListener('pop', function(e) {
+			hideSubToolbar();
+		});
 		zoomPalette.addEventListener('zoom', function(e) {
 			var action = e.detail.zoom;
 			var currentZoom = cy.zoom();
@@ -72,6 +75,7 @@ define(function (require) {
 			if (!ignoreForegroundEvent) {
 				lastSelected.style('color', e.detail.color);
 				lastSelected.data('color', e.detail.color);
+				pushState();
 			}
 			ignoreForegroundEvent = false;
 		});
@@ -80,6 +84,7 @@ define(function (require) {
 			if (!ignoreBackgroundEvent) {
 				lastSelected.style('background-color', e.detail.color);
 				lastSelected.data('background-color', e.detail.color);
+				pushState();				
 			}
 			ignoreBackgroundEvent = false;
 		});
@@ -88,14 +93,16 @@ define(function (require) {
 			var newfont = e.detail.family;
 			lastSelected.data('font-family', newfont);
 			lastSelected.removeClass('arial-text comic-text verdana-text');
-			updateNodeText(lastSelected);
+			updateNodeText(lastSelected);			
 			if (newfont == 'Arial') lastSelected.addClass('arial-text');
 			else if (newfont == 'Comic Sans MS') lastSelected.addClass('comic-text');
 			else if (newfont == 'Verdana') lastSelected.addClass('verdana-text');
+			pushState();
 		});
 		
 		textValue.addEventListener('input', function() {
 			updateNodeText(lastSelected, textValue.value);
+			pushState();
 		});
 		
 		boldButton.addEventListener('click', function () {
@@ -106,6 +113,7 @@ define(function (require) {
 				boldButton.classList.remove('active');			
 			}
 			updateNodeText(lastSelected);
+			pushState();
 		});
 		italicButton.addEventListener('click', function () {
 			lastSelected.toggleClass('italic-text');
@@ -115,19 +123,23 @@ define(function (require) {
 				italicButton.classList.remove('active');			
 			}
 			updateNodeText(lastSelected);
+			pushState();
 		});
 		
 		fontMinusButton.addEventListener('click', function() {
 			lastSelected.data('font-size', Math.max(6, lastSelected.data('font-size')-2));
 			updateNodeText(lastSelected);
+			pushState();
 		});
 		
 		fontPlusButton.addEventListener('click', function() {
 			lastSelected.data('font-size', Math.min(100, lastSelected.data('font-size')+2));
 			updateNodeText(lastSelected);
+			pushState();
 		});
 		
 		var showSubToolbar = function(node) {
+			zoomPalette.popDown();
 			subToolbar.style.visibility = "visible";
 			textValue.value = node.style()["content"];
 			if (node.hasClass('bold-text')) {
@@ -180,6 +192,7 @@ define(function (require) {
 				selectNode(firstNode);
 				lastSelected = firstNode;
 				showSubToolbar(firstNode);
+				pushState();
 				
 				// Load world
 				loadGraph();
@@ -233,11 +246,13 @@ define(function (require) {
 		cy.on('tap', 'node', function() {
 			if (currentMode == 2) {
 				deleteNode(this);
+				pushState();
 				if (lastSelected == this) lastSelected = null;
 				return;
 			} else if (currentMode == 1) {
 				if (lastSelected != null && lastSelected != this) {
 					createEdge(lastSelected, this);
+					pushState();
 				}
 				lastSelected = this;
 				return;
@@ -266,6 +281,7 @@ define(function (require) {
 		cy.on('select', 'edge', function() {
 			if (currentMode == 2) {
 				deleteEdge(this);
+				pushState();
 				return;
 			}
 			hideSubToolbar();
@@ -278,12 +294,18 @@ define(function (require) {
 					var newNode = createNode(defaultText, e.cyPosition);
 					if (lastSelected != null)
 						createEdge(lastSelected, newNode);
+					pushState();
 					newNode.select();
 					selectNode(newNode);
 					lastSelected = newNode;					
 					showSubToolbar(newNode);
 				}
 			}
+		});
+		
+		// Event: elements moved
+		cy.on('free', 'node', function(e) {
+			pushState();
 		});
 
 		// --- Node and edge handling functions
@@ -424,52 +446,128 @@ define(function (require) {
 			var datastoreObject = activity.getDatastoreObject();
 			datastoreObject.loadAsText(function (error, metadata, data) {
 				if (data == null)
-					return;
-					
-				// Destroy the world
-				cy.remove("node");
-				cy.remove("edge");
-				hideSubToolbar();
-				lastSelected = null;
-				
-				// Recreate nodes and set styles and text
-				cy.add({
-					group: 'nodes',
-					nodes: data.elements.nodes
-				});
-				var nodes = cy.collection("node");
-				var maxCount = 0;
-				for (var i = 0 ; i < nodes.length ; i++) {
-					var newnode = nodes[i];
-					updateNodeText(newnode, newnode.data('content'));
-					newnode.style('color', newnode.data('color'));
-					newnode.style('background-color', newnode.data('background-color'));
-					var id = newnode.data('id').substr(1);
-					if (id > maxCount) maxCount = id;
-				}
-				nodeCount = maxCount+1;
-				
-				// Recreate edges
-				cy.add({
-					group: 'edges',
-					edges: data.elements.edges
-				});
-				var edges = cy.collection("edge");
-				maxCount = 0;
-				for (var i = 0 ; i < edges.length ; i++) {
-					var id = edges[i].data('id').substr(1);
-					if (id > maxCount) maxCount = id;
-				}
-				edgeCount = maxCount+1;
+					return;					
+				displayGraph(data);
+				reinitState();
+				pushState();
 			});
 		}
 		
 		// Save graph to datastore
 		var saveGraph = function(callback) {
 			var datastoreObject = activity.getDatastoreObject();
-			var jsonData = cy.json();
+			var jsonData = getGraph();
 			datastoreObject.setDataAsText(jsonData);
 			datastoreObject.save(callback);
 		}
+		
+		// Get a deep copy of current Graph
+		var deepCopy = function(o) {
+			var copy = o,k;
+			if (o && typeof o === 'object') {
+				copy = Object.prototype.toString.call(o) === '[object Array]' ? [] : {};
+				for (k in o) {
+					copy[k] = deepCopy(o[k]);
+				}
+			}
+			return copy;
+		}
+		var getGraph = function() {
+			return deepCopy(cy.json());
+		}
+		
+		// Display a saved graph
+		var displayGraph = function(graph) {
+			// Destroy the graph
+			cy.remove("node");
+			cy.remove("edge");
+			hideSubToolbar();
+			lastSelected = null;
+			
+			// Recreate nodes and set styles and text
+			cy.add({
+				group: 'nodes',
+				nodes: graph.elements.nodes
+			});
+			var nodes = cy.collection("node");
+			var maxCount = 0;
+			for (var i = 0 ; i < nodes.length ; i++) {
+				var newnode = nodes[i];
+				updateNodeText(newnode, newnode.data('content'));
+				newnode.style('color', newnode.data('color'));
+				newnode.style('background-color', newnode.data('background-color'));
+				var id = newnode.data('id').substr(1);
+				if (id > maxCount) maxCount = id;
+			}
+			nodeCount = maxCount+1;
+			
+			// Recreate edges
+			maxCount = 0;
+			if (graph.elements.edges) {
+				cy.add({
+					group: 'edges',
+					edges: graph.elements.edges
+				});
+				var edges = cy.collection("edge");
+				for (var i = 0 ; i < edges.length ; i++) {
+					var id = edges[i].data('id').substr(1);
+					if (id > maxCount) maxCount = id;
+				}
+			}
+			edgeCount = maxCount+1;		
+		}
+		
+		// Do/Undo handling
+		var stateHistory = [];
+		var stateIndex = 0;
+		var maxHistory = 30;
+		var undoButton = document.getElementById("undo-button");
+		undoButton.addEventListener('click', function () { undoState(); }, true);
+		var redoButton = document.getElementById("redo-button");
+		redoButton.addEventListener('click', function () { redoState(); }, true);		
+
+		var reinitState = function() {
+			stateHistory = [];
+			stateIndex = 0;
+		}
+		
+		var pushState = function() {
+			if (stateIndex < stateHistory.length - 1) {
+				var stateCopy = [];
+				for (var i = 0 ; i < stateIndex + 1; i++)
+					stateCopy.push(stateHistory[i]);
+				stateHistory = stateCopy;
+			}
+			var stateLength = stateHistory.length - 1;
+			var currentState = getGraph();
+			if (stateLength < maxHistory) stateHistory.push(currentState);
+			else {
+				for (var i = 0 ; i < stateLength-1 ; i++) {
+					stateHistory[i] = stateHistory[i+1];
+				}
+				stateHistory[stateLength-1] = currentState;
+			}
+			stateIndex = stateHistory.length - 1;
+			updateStateButtons();
+		}
+		
+		var undoState = function() {
+			if (stateHistory.length < 1 || (stateHistory.length >= 1 && stateIndex == 0)) return;
+			displayGraph(stateHistory[--stateIndex]);
+			updateStateButtons();
+		}
+		
+		var redoState = function() {
+			if (stateIndex+1 >= stateHistory.length) return;
+			displayGraph(stateHistory[++stateIndex]);			
+			updateStateButtons();
+		}
+		
+		var updateStateButtons = function() {
+			var stateLength = stateHistory.length;
+			undoButton.disabled = (stateHistory.length < 1 || (stateHistory.length >= 1 && stateIndex == 0));
+			redoButton.disabled = (stateIndex+1 >= stateLength);
+		}
+
     });
 });
