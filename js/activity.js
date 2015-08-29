@@ -1,6 +1,7 @@
 define(function (require) {
 	var l10n = require("webL10n");
     var activity = require("sugar-web/activity/activity");
+	var datastore = require("sugar-web/datastore");
 	var colorpalette = require("sugar-web/graphics/colorpalette");
 	var zoompalette = require("zoompalette");
 	var textpalette = require("fontpalette");
@@ -52,7 +53,23 @@ define(function (require) {
 				cy.center();
 			}
 		});
-		
+		var pngButton = document.getElementById("png-button");
+		pngButton.addEventListener('click', function(e) {
+			var inputData = cy.png();
+			var mimetype = inputData.split(";")[0].split(":")[1];
+			var type = mimetype.split("/")[0];
+			var metadata = {
+				mimetype: mimetype,
+				title: type.charAt(0).toUpperCase() + type.slice(1) + " LabyrinthJS",
+				activity: "org.olpcfrance.MediaViewerActivity",
+				timestamp: new Date().getTime(),
+				creation_time: new Date().getTime(),
+				file_size: 0
+			};
+			datastore.create(metadata, function() {
+				console.log("export done.")
+			}, inputData);
+		});
 		
 		// Handle sub toolbar
 		var subToolbar = document.getElementById("sub-toolbar");
@@ -204,6 +221,7 @@ define(function (require) {
 			fontMinusButton.title = l10n.get("fontMinusButtonTitle");
 			fontPlusButton.title = l10n.get("fontPlusButtonTitle");
 			fontButton.title = l10n.get("fontButtonTitle");
+			pngButton.title = l10n.get("pngButtonTitle");
 		}, false);
 		
 		// --- Cytoscape handling
