@@ -337,10 +337,12 @@ define(function (require) {
 			if (e.cyTarget === cy) {
 				if (currentMode == 0) {
 					var newNode = createNode(defaultText, e.cyPosition);
-					if (lastSelected != null)
+					if (lastSelected != null) {
 						createEdge(lastSelected, newNode);
+					}
 					pushState();
 					newNode.select();
+					unselectAllNode();
 					selectNode(newNode);
 					lastSelected = newNode;
 					showSubToolbar(newNode);
