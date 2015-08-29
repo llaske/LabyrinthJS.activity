@@ -339,10 +339,10 @@ define(function (require) {
 					var newNode = createNode(defaultText, e.cyPosition);
 					if (lastSelected != null) {
 						createEdge(lastSelected, newNode);
+						unselectNode(lastSelected);
 					}
 					pushState();
 					newNode.select();
-					unselectAllNode();
 					selectNode(newNode);
 					lastSelected = newNode;
 					showSubToolbar(newNode);
