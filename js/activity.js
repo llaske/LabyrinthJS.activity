@@ -1,16 +1,16 @@
 define(function (require) {
 	var l10n = require("webL10n");
-    var activity = require("sugar-web/activity/activity");
+	var activity = require("sugar-web/activity/activity");
 	var datastore = require("sugar-web/datastore");
 	var colorpalette = require("sugar-web/graphics/colorpalette");
 	var zoompalette = require("zoompalette");
 	var textpalette = require("fontpalette");
 
-    // Manipulate the DOM only when it is ready.
-    require(['domReady!'], function (doc) {
+	// Manipulate the DOM only when it is ready.
+	require(['domReady!'], function (doc) {
 
-        // Initialize the activity.
-        activity.setup();
+		// Initialize the activity.
+		activity.setup();
 
 		// Handle toolbar mode switch
 		var currentMode = 0;
@@ -19,8 +19,8 @@ define(function (require) {
 		var removeButton = document.getElementById("delete-button");
 		var switchMode = function(newMode) {
 			currentMode = newMode;
-			nodetextButton.classList.remove('active');			
-			linkButton.classList.remove('active');			
+			nodetextButton.classList.remove('active');
+			linkButton.classList.remove('active');
 			removeButton.classList.remove('active');
 			if (newMode == 0) nodetextButton.classList.add('active');
 			else if (newMode == 1) linkButton.classList.add('active');
@@ -34,8 +34,8 @@ define(function (require) {
 		nodetextButton.addEventListener('click', function () { switchMode(0); }, true);
 		linkButton.addEventListener('click', function () { switchMode(1); lastSelected = null; }, true);
 		removeButton.addEventListener('click', function () { switchMode(2); }, true);
-        var zoomButton = document.getElementById("zoom-button");		
-		zoomPalette = new zoompalette.zoomPalette(zoomButton);		
+		var zoomButton = document.getElementById("zoom-button");
+		zoomPalette = new zoompalette.zoomPalette(zoomButton);
 		zoomPalette.addEventListener('pop', function(e) {
 			hideSubToolbar();
 		});
@@ -76,17 +76,17 @@ define(function (require) {
 		var textValue = document.getElementById("textvalue");
 		var boldButton = document.getElementById("bold-button");
 		var italicButton = document.getElementById("italics-button");
-        var foregroundButton = document.getElementById("foreground-button");
+		var foregroundButton = document.getElementById("foreground-button");
 		foregroundPalette = new colorpalette.ColorPalette(foregroundButton);
 		foregroundPalette.setColor('rgb(0, 0, 0)');
 		var ignoreForegroundEvent = false; // HACK: Need because SetColor itself raise an event
-        var backgroundButton = document.getElementById("background-button");
+		var backgroundButton = document.getElementById("background-button");
 		backgroundPalette = new colorpalette.ColorPalette(backgroundButton);
 		backgroundPalette.setColor('rgb(255, 255, 255)');
 		var ignoreBackgroundEvent = false;
 		var fontMinusButton = document.getElementById("fontminus-button");
 		var fontPlusButton = document.getElementById("fontplus-button");
-        var fontButton = document.getElementById("font-button");
+		var fontButton = document.getElementById("font-button");
 		fontPalette = new textpalette.TextPalette(fontButton);
 		
 		foregroundPalette.addEventListener('colorChange', function(e) {
@@ -102,7 +102,7 @@ define(function (require) {
 			if (!ignoreBackgroundEvent) {
 				lastSelected.style('background-color', e.detail.color);
 				lastSelected.data('background-color', e.detail.color);
-				pushState();				
+				pushState();
 			}
 			ignoreBackgroundEvent = false;
 		});
@@ -111,7 +111,7 @@ define(function (require) {
 			var newfont = e.detail.family;
 			lastSelected.data('font-family', newfont);
 			lastSelected.removeClass('arial-text comic-text verdana-text');
-			updateNodeText(lastSelected);			
+			updateNodeText(lastSelected);
 			if (newfont == 'Arial') lastSelected.addClass('arial-text');
 			else if (newfont == 'Comic Sans MS') lastSelected.addClass('comic-text');
 			else if (newfont == 'Verdana') lastSelected.addClass('verdana-text');
@@ -128,7 +128,7 @@ define(function (require) {
 			if (lastSelected.hasClass('bold-text')) {
 				boldButton.classList.add('active');
 			} else {
-				boldButton.classList.remove('active');			
+				boldButton.classList.remove('active');
 			}
 			updateNodeText(lastSelected);
 			pushState();
@@ -163,12 +163,12 @@ define(function (require) {
 			if (node.hasClass('bold-text')) {
 				boldButton.classList.add('active');
 			} else {
-				boldButton.classList.remove('active');			
+				boldButton.classList.remove('active');
 			}
 			if (node.hasClass('italic-text')) {
 				italicButton.classList.add('active');
 			} else {
-				italicButton.classList.remove('active');			
+				italicButton.classList.remove('active');
 			}
 			ignoreForegroundEvent = true;
 			foregroundPalette.setColor(node.style()['color']);
@@ -342,7 +342,7 @@ define(function (require) {
 					pushState();
 					newNode.select();
 					selectNode(newNode);
-					lastSelected = newNode;					
+					lastSelected = newNode;
 					showSubToolbar(newNode);
 				}
 			}
@@ -432,7 +432,7 @@ define(function (require) {
 		var unselectNode = function(node) {
 			node.style({
 				'border-color': 'darkgray',
-				'border-style': 'solid',					
+				'border-style': 'solid',
 				'border-width': '1px'
 			});		
 		}
@@ -456,8 +456,8 @@ define(function (require) {
 				group: 'nodes',
 				edges: [
 					{ data: { id: 'e'+(++edgeCount), source: n1.id(), target: n2.id() } }
-				]							
-			});		
+				]
+			});
 		}
 		
 		// Remove an edge
@@ -475,7 +475,7 @@ define(function (require) {
 			if (bold) computer.style.fontWeight = "bold";
 			else computer.style.fontWeight = "normal";
 			if (italic) computer.style.fontStyle = "italic";
-			else computer.style.fontStyle = "normal";			
+			else computer.style.fontStyle = "normal";
 			return {width: (computer.clientWidth+fontsize)+"px", height: (computer.clientHeight+fontsize)+"px"};
 		}
 		
@@ -491,7 +491,7 @@ define(function (require) {
 			var datastoreObject = activity.getDatastoreObject();
 			datastoreObject.loadAsText(function (error, metadata, data) {
 				if (data == null)
-					return;					
+					return;
 				displayGraph(data);
 				reinitState();
 				pushState();
@@ -559,7 +559,7 @@ define(function (require) {
 					if (id > maxCount) maxCount = id;
 				}
 			}
-			edgeCount = maxCount+1;		
+			edgeCount = maxCount+1;
 		}
 		
 		// Do/Undo handling
@@ -569,7 +569,7 @@ define(function (require) {
 		var undoButton = document.getElementById("undo-button");
 		undoButton.addEventListener('click', function () { undoState(); }, true);
 		var redoButton = document.getElementById("redo-button");
-		redoButton.addEventListener('click', function () { redoState(); }, true);		
+		redoButton.addEventListener('click', function () { redoState(); }, true);
 
 		var reinitState = function() {
 			stateHistory = [];
@@ -604,7 +604,7 @@ define(function (require) {
 		
 		var redoState = function() {
 			if (stateIndex+1 >= stateHistory.length) return;
-			displayGraph(stateHistory[++stateIndex]);			
+			displayGraph(stateHistory[++stateIndex]);
 			updateStateButtons();
 		}
 		
@@ -613,5 +613,5 @@ define(function (require) {
 			undoButton.disabled = (stateHistory.length < 1 || (stateHistory.length >= 1 && stateIndex == 0));
 			redoButton.disabled = (stateIndex+1 >= stateLength);
 		}
-    });
+	});
 });
