@@ -149,3 +149,84 @@
 .palette .colors tr:nth-last-child(1) button {
   margin-bottom: 5.5px;
 }
+
+@media screen and (max-width: 905px) {
+ .splitbar {
+   visibility: hidden;
+   width: 0px;
+ }
+
+ #sub-toolbar #fontminus-button {
+   visibility: hidden;
+ }
+
+ #sub-toolbar #font-button {
+   visibility: hidden;
+ }
+ 
+ #fontpalette {
+   left: 0px !important;
+ }
+
+ #sub-toolbar #fontplus-button {
+   visibility: hidden;
+ }
+}
+
+@media screen and (max-width: 810px) {
+ .search-field-input {
+  width: 120px;
+ }
+ 
+ .search-field-border  {
+   width: 200px;
+ }
+}
+
+@media screen and (max-width: 650px) {
+ .search-field-border {
+   margin-left: 5px;
+ }
+}
+
+@media screen and (max-width: 640px) {
+ #main-toolbar #png-button {
+   visibility: hidden;
+   width: 0px;
+ }
+}
+
+@media screen and (max-width: 600px) {
+ .toolbar {
+   padding-left: 10px;
+ }
+ #main-toolbar #zoom-button {
+   visibility: hidden;
+   left: 0px;
+   width: 0px;
+ }
+ 
+ #zoompalette {
+   left: 0px !important;
+ }
+ 
+ #colorpalette {
+   left: 0px !important;
+ }
+ 
+ #foreground-button {
+   visibility: hidden;
+   width: 0px; left: 0px;
+ }
+ 
+ #background-button {
+   visibility: hidden;
+   width: 0px; left: 0px;
+ }
+}
+
+@media screen and (max-width: 515px) {
+ #main-toolbar #stop-button {
+   position :absolute;
+ }
+}
