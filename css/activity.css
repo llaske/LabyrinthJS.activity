@@ -108,8 +108,10 @@
   width: 3px;
   margin-left: 5px;
   margin-right: 4px;
+  margin-bottom: 4px;
   height: 45px;
   display: inline-block;
+  vertical-align: bottom;
 }
 
 #sub-toolbar #fontminus-button {
@@ -210,7 +212,7 @@
    left: 0px !important;
  }
  
- #colorpalette {
+ .colorpalette {
    left: 0px !important;
  }
  
@@ -227,6 +229,6 @@
 
 @media screen and (max-width: 515px) {
  #main-toolbar #stop-button {
-   position :absolute;
+   position: absolute;
  }
 }
